@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RewardHub — Demo</title>
+<style>
+:root{--bg:#0b1220;--panel:#131e31;--panel2:#1a2940;--text:#f3f7ff;--muted:#a9b7ce;--accent:#5ee0a0;--line:#2a3b56;--warn:#ffd479}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:linear-gradient(145deg,#0b1220,#101c30);color:var(--text)}.wrap{max-width:1000px;margin:auto;padding:24px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.brand{font-size:24px;font-weight:800;letter-spacing:-.5px}.brand span{color:var(--accent)}.tag{font-size:12px;border:1px solid #4b5d76;border-radius:99px;padding:6px 10px;color:var(--warn)}h1{font-size:clamp(30px,5vw,48px);line-height:1.05;margin:32px 0 12px;letter-spacing:-1px}.sub{color:var(--muted);max-width:650px;line-height:1.6}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}.stat,.card{background:rgba(19,30,49,.94);border:1px solid var(--line);border-radius:18px;padding:18px}.stat small,.muted{color:var(--muted)}.big{font-size:28px;font-weight:800;margin-top:5px}.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}.card h2{margin:0 0 12px;font-size:20px}.question{font-size:18px;font-weight:650;line-height:1.4;margin:12px 0}.answers{display:grid;grid-template-columns:1fr 1fr;gap:9px}.btn{border:1px solid #3c506e;background:var(--panel2);color:var(--text);padding:11px 13px;border-radius:11px;font:inherit;cursor:pointer}.btn:hover{border-color:var(--accent)}.primary{background:var(--accent);border-color:var(--accent);color:#082116;font-weight:750}.btn:disabled{opacity:.5;cursor:not-allowed}input,select{width:100%;background:#0b1526;color:var(--text);border:1px solid #3c506e;border-radius:10px;padding:12px;font:inherit;margin:6px 0 12px}.stack{display:grid;gap:8px}.history{margin-top:12px;max-height:180px;overflow:auto}.item{padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;display:flex;justify-content:space-between;gap:8px}.notice{margin-top:18px;border:1px solid #6c5830;background:#2b2417;color:#ffe6ad;padding:13px 15px;border-radius:12px;font-size:13px;line-height:1.5}.foot{color:var(--muted);font-size:12px;text-align:center;margin:24px 0 8px}@media(max-width:720px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr}.answers{grid-template-columns:1fr 1fr}.wrap{padding:16px}}
+</style>
+</head>
+<body><main class="wrap">
+<header class="top"><div class="brand">Reward<span>Hub</span></div><div class="tag">DEMO VERSION · NO REAL CASH</div></header>
+<h1>Play a little.<br><span style="color:var(--accent)">Earn points.</span></h1>
+<p class="sub">A starter demo for a rewards platform. Answer the daily quiz, track your points, and test the withdrawal request flow. This version stores data only in this browser on this device.</p>
+<section class="stats"><div class="stat"><small>Demo points balance</small><div class="big" id="balance">0 pts</div></div><div class="stat"><small>Quizzes completed</small><div class="big" id="completed">0</div></div><div class="stat"><small>Reward status</small><div class="big" style="font-size:19px;color:var(--warn)">Demo only</div></div></section>
+<div class="grid"><section class="card"><h2>🎯 Daily quiz</h2><div class="muted" id="qcount">Question 1 of 3</div><div class="question" id="question">Loading quiz…</div><div class="answers" id="answers"></div><p class="muted" id="feedback" aria-live="polite"></p><button class="btn" id="next" style="display:none">Next question →</button><div class="notice">Points are for testing only. Correct answers add demo points; they have no cash value.</div></section>
+<aside class="card"><h2>💳 Request a reward</h2><p class="muted" style="font-size:14px">Test the request form. It will not send money or contact a payment provider.</p><label for="method">Preferred method</label><select id="method"><option>JazzCash (demo)</option><option>Easypaisa (demo)</option><option>Bank transfer (demo)</option></select><label for="amount">Requested amount (PKR)</label><input id="amount" type="number" min="100" step="50" value="100"><button class="btn primary" id="request">Create demo request</button><p id="requestMsg" class="muted" aria-live="polite"></p><h2 style="margin-top:22px">📜 Activity</h2><div class="history" id="history"><p class="muted">No activity yet.</p></div><button class="btn" id="reset" style="margin-top:12px;width:100%">Reset demo data</button></aside></div>
+<div class="notice"><b>Before real launch:</b> add secure user accounts and server-side database, abuse prevention, published reward terms, privacy policy, and an approved revenue/payout setup. Never promise guaranteed daily income. Do not reward clicks on ads; use only monetization providers whose policies explicitly allow your intended reward model.</div>
+<div class="foot">RewardHub starter demo · Built for learning · No real payments</div>
+</main>
+<script>
+const quiz=[
+ {q:'Which planet is known as the Red Planet?',a:['Mars','Venus','Jupiter','Mercury'],correct:0},
+ {q:'How many minutes are in one hour?',a:['30','45','60','90'],correct:2},
+ {q:'Which one is a web browser?',a:['Chrome','Excel','Photoshop','Calculator'],correct:0}
+];
+const KEY='rewardhub_demo_v1';let state;try{state=JSON.parse(localStorage.getItem(KEY))||{points:0,completed:0,done:[],history:[]}}catch(e){state={points:0,completed:0,done:[],history:[]}}
+let idx=0,answered=false;
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem(KEY,JSON.stringify(state));renderStats();renderHistory()}
+function renderStats(){$('balance').textContent=state.points+' pts';$('completed').textContent=state.completed}
+function renderHistory(){const el=$('history');if(!state.history.length){el.innerHTML='<p class="muted">No activity yet.</p>';return}el.innerHTML=state.history.slice().reverse().map(x=>`<div class="item"><span>${escapeHtml(x.text)}</span><span>${escapeHtml(x.when)}</span></div>`).join('')}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function log(text){state.history.push({text,when:new Date().toLocaleString()});if(state.history.length>30)state.history.shift()}
+function renderQuestion(){answered=false;const q=quiz[idx];$('qcount').textContent=`Question ${idx+1} of ${quiz.length}`;$('question').textContent=q.q;$('feedback').textContent='';$('next').style.display='none';$('answers').innerHTML='';q.a.forEach((answer,i)=>{const b=document.createElement('button');b.className='btn';b.textContent=answer;b.onclick=()=>choose(i);$('answers').appendChild(b)})}
+function choose(i){if(answered)return;answered=true;const q=quiz[idx];[...$('answers').children].forEach((b,j)=>{b.disabled=true;if(j===q.correct)b.style.borderColor='var(--accent)'});if(i===q.correct){state.points+=10;state.completed+=1;state.done.push(idx);log('Quiz correct: +10 demo points');$('feedback').textContent='Correct! +10 demo points 🎉';}else{$('feedback').textContent='Not quite. The correct answer is '+q.a[q.correct]+'.'}save();$('next').style.display='inline-block';$('next').textContent=idx===quiz.length-1?'Restart quiz ↻':'Next question →'}
+$('next').onclick=()=>{idx=(idx+1)%quiz.length;renderQuestion()};
+$('request').onclick=()=>{const amount=Number($('amount').value);if(!Number.isFinite(amount)||amount<100){$('requestMsg').textContent='Enter a demo amount of at least Rs. 100.';return}if(state.points<amount){$('requestMsg').textContent=`Not enough demo points. Your balance is ${state.points} points; this form is only a test.`;return}state.points-=amount;log(`Demo reward request: Rs. ${amount} via ${$('method').value}`);save();$('requestMsg').textContent='Demo request recorded locally. No money was sent.'};
+$('reset').onclick=()=>{if(confirm('Reset all demo points and activity on this browser?')){state={points:0,completed:0,done:[],history:[]};idx=0;save();renderQuestion();$('requestMsg').textContent='';$('amount').value=100}};
+renderStats();renderHistory();renderQuestion();
+</script></body></html>
