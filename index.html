@@ -38,4 +38,123 @@ $('next').onclick=()=>{idx=(idx+1)%quiz.length;renderQuestion()};
 $('request').onclick=()=>{const amount=Number($('amount').value);if(!Number.isFinite(amount)||amount<100){$('requestMsg').textContent='Enter a demo amount of at least Rs. 100.';return}if(state.points<amount){$('requestMsg').textContent=`Not enough demo points. Your balance is ${state.points} points; this form is only a test.`;return}state.points-=amount;log(`Demo reward request: Rs. ${amount} via ${$('method').value}`);save();$('requestMsg').textContent='Demo request recorded locally. No money was sent.'};
 $('reset').onclick=()=>{if(confirm('Reset all demo points and activity on this browser?')){state={points:0,completed:0,done:[],history:[]};idx=0;save();renderQuestion();$('requestMsg').textContent='';$('amount').value=100}};
 renderStats();renderHistory();renderQuestion();
-</script></body></html>
+</script>
+<!-- RewardHub Signup / Login -->
+<section id="rewardhub-auth" style="max-width:400px;margin:30px auto;padding:24px;border:1px solid #ddd;border-radius:14px;font-family:Arial,sans-serif;">
+  <h2>RewardHub Account</h2>
+
+  <form id="signup-form">
+    <h3>Create Account</h3>
+    <input id="signup-email" type="email" placeholder="Email address" required
+      style="width:100%;padding:12px;margin:6px 0;box-sizing:border-box;">
+    <input id="signup-password" type="password" placeholder="Password (min 8 characters)"
+      minlength="8" required
+      style="width:100%;padding:12px;margin:6px 0;box-sizing:border-box;">
+    <button type="submit" style="padding:12px;width:100%;margin-top:8px;">
+      Create Account
+    </button>
+  </form>
+
+  <hr style="margin:22px 0;">
+
+  <form id="login-form">
+    <h3>Login</h3>
+    <input id="login-email" type="email" placeholder="Email address" required
+      style="width:100%;padding:12px;margin:6px 0;box-sizing:border-box;">
+    <input id="login-password" type="password" placeholder="Password" required
+      style="width:100%;padding:12px;margin:6px 0;box-sizing:border-box;">
+    <button type="submit" style="padding:12px;width:100%;margin-top:8px;">
+      Login
+    </button>
+  </form>
+
+  <p id="auth-message" role="status" aria-live="polite"></p>
+  <p id="user-status"></p>
+  <button id="logout-button" type="button" hidden>Logout</button>
+</section>
+
+<script type="module">
+  import { createClient } from
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+  // Apni Supabase public details yahan paste karein
+  const SUPABASE_URL = 'https://qegzksxuaxjldeunbdhr.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_MoFv_-0thf1KEtOOW6pwrA_MrQw20sq';
+
+  const supabase = createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+  const message = document.getElementById('auth-message');
+  const status = document.getElementById('user-status');
+  const logoutButton = document.getElementById('logout-button');
+
+  document.getElementById('signup-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    message.textContent = 'Creating account...';
+
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password
+    });
+
+    if (error) {
+      message.textContent = error.message;
+      return;
+    }
+
+    message.textContent = data.session
+      ? 'Account created! You are logged in.'
+      : 'Account created. Check your email to confirm, then log in.';
+    await updateUserStatus();
+  });
+
+  document.getElementById('login-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    message.textContent = 'Logging in...';
+
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      message.textContent = error.message;
+      return;
+    }
+
+    message.textContent = 'Login successful!';
+    await updateUserStatus();
+  });
+
+  logoutButton.addEventListener('click', async () => {
+    const { error } = await supabase.auth.signOut();
+
+    message.textContent = error ? error.message : 'You have logged out.';
+    await updateUserStatus();
+  });
+
+  async function updateUserStatus() {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    status.textContent = user
+      ? 'Logged in as: ' + user.email
+      : 'You are not logged in.';
+
+    logoutButton.hidden = !user;
+  }
+
+  supabase.auth.onAuthStateChange(() => {
+    updateUserStatus();
+  });
+
+  updateUserStatus();
+</script>
+</body></html>
